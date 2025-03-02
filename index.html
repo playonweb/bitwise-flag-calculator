@@ -98,6 +98,33 @@
             </div>
         </div>
 
+        <div class="mt-6 p-4 bg-gray-200 rounded-lg text-center">
+            <h3 class="text-xl font-semibold">All Possible Flags</h3>
+            <div class="max-h-60 overflow-y-auto border rounded-lg mt-2">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-300">
+                            <th class="p-2 border">Decimal</th>
+                            <th class="p-2 border">Binary</th>
+                            <th class="p-2 border">Flags</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="num in allFlags" :key="num" class="odd:bg-white even:bg-gray-100">
+                            <td class="p-2 border">{{ num }}</td>
+                            <td class="p-2 border">{{ num.toString(2).padStart(4, '0') }}</td>
+                            <td class="p-2 border">
+                                <!-- {{ getFlagsForNumber(num).join(', ') }} -->
+                                <span v-for="flag in getFlagsForNumber(num)" :key="flag"
+                                    class="bg-gray-200 px-2 py-1 rounded-lg text-sm">{{ flag }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- divider line -->
         <div class="border-b border-gray-300"></div>
 
@@ -136,10 +163,14 @@
                     newFlagName: '',
                     newFlagValue: 16, // Default value for new flag
                     flagNumberInput: 0,  // Flag number input
-                    possibleFlags: []  // To display set flags message
+                    possibleFlags: [], // To display set flags message
+                    allFlags: [] // All possible flags calculated dynamically
                 };
             },
             computed: {
+                totalFlagsSum() {
+                    return Object.values(this.flags).reduce((acc, val) => acc + val, 0);
+                },
                 computedFlags() {
                     return this.selectedFlags.reduce((acc, val) => acc | val, 0);
                 },
@@ -198,17 +229,16 @@
                             this.possibleFlags.push(key);
                         }
                     }
+                },
+                getFlagsForNumber(num) {
+                    return Object.keys(this.flags).filter(flag => (num & this.flags[flag]) === this.flags[flag]);
                 }
+            },
+            mounted() {
+                this.allFlags = Array.from({ length: this.totalFlagsSum + 1 }, (_, i) => i);
             }
         }).mount('#app');
     </script>
 </body>
-<!-- Copyright Footer -->
-<footer class="text-center py-4 mt-8 bg-gray-800 text-white">
-    <p>&copy; <span id="year"></span> PlayOnWeb.org All rights reserved.</p>
-</footer>
 
-<script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-</script>
 </html>
