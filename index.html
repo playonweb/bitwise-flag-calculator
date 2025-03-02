@@ -7,7 +7,8 @@
     <title>Bitwise Flag Calculator</title>
     <link rel="icon" href="https://playonweb.org/favicon.ico" type="image/x-icon">
 
-    <meta name="keywords" content="bitwise, flag calculator, binary, bitwise operations, flags, power calculation, Vue.js, Tailwind CSS, web development">
+    <meta name="keywords"
+        content="bitwise, flag calculator, binary, bitwise operations, flags, power calculation, Vue.js, Tailwind CSS, web development">
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Bitwise Flag Calculator">
     <meta property="og:description" content="A simple tool to calculate bitwise flags and binary operations.">
@@ -18,7 +19,9 @@
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
 <body class="bg-gray-100 py-12">
@@ -30,7 +33,20 @@
             <i @click="resetFlags" class="fas fa-red
             fa-sync-alt cursor-pointer text-blue-500 hover:text-blue-600 transition duration-200"></i>
         </h2>
+       
         <div class="space-y-4">
+            <!-- Select All / Unselect All Buttons -->
+            <div class="text-left space-x-4">
+                <button @click="selectAll" class="text-gray-500 hover:text-gray-600">
+                    Select All
+                </button>
+                <button @click="unselectAll" class="text-gray-500 hover:text-gray-600">
+                    Unselect All
+                </button>
+                <button @click="loadExample" class="text-gray-500 hover:text-gray-600">
+                    Load Example
+                </button>
+            </div>
             <label v-for="(value, key) in flags" :key="key" class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <!-- Checkbox -->
@@ -88,13 +104,15 @@
             <div class="flex justify-center items-center space-x-4">
                 <input v-model="flagNumberInput" type="number" placeholder="Enter flag number"
                     class="w-32 p-2 border rounded-lg text-center">
-                <button @click="getPossibleFlagsByNumber" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                <button @click="getPossibleFlagsByNumber"
+                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
                     Get Possible Flags
                 </button>
             </div>
             <div class="flex items-center space-x-2 mt-2">
                 <span class="text-sm text-gray-500">Possible Flags:</span>
-                <span v-for="flag in possibleFlags" :key="flag" class="bg-gray-200 px-2 py-1 rounded-lg text-sm">{{ flag }}</span>
+                <span v-for="flag in possibleFlags" :key="flag" class="bg-gray-200 px-2 py-1 rounded-lg text-sm">{{ flag
+                    }}</span>
             </div>
         </div>
 
@@ -148,12 +166,7 @@
                     isTrash: {
                         ...Array(4).fill(false)
                     },
-                    flags: {
-                        Flag1: 1,      // 0001
-                        Flag2: 2,   // 0010
-                        Flag3: 4,    // 0100
-                        Flag4: 8     // 1000
-                    },
+                    flags: this.getFlagsFromUrl() || this.getDefaultFlags(),
                     selectedFlags: [],
                     checkResult: null,
                     checkFlagName: '',
@@ -161,10 +174,8 @@
                     decimalOperation: '',
                     powerInput: 0,
                     newFlagName: '',
-                    newFlagValue: 16, // Default value for new flag
                     flagNumberInput: 0,  // Flag number input
                     possibleFlags: [], // To display set flags message
-                    allFlags: [] // All possible flags calculated dynamically
                 };
             },
             computed: {
@@ -176,9 +187,39 @@
                 },
                 calculatePower() {
                     return Math.pow(2, this.powerInput);
+                },
+                newFlagValue() {
+                    return Math.pow(2, Math.ceil(Math.log2(this.totalFlagsSum + 1)));
+                },
+                allFlags() {
+                    return Array.from({ length: this.totalFlagsSum + 1 }, (_, i) => i);
                 }
             },
             methods: {
+                getFlagsFromUrl() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const flags = {};
+                    urlParams.forEach((value, key) => {
+                        flags[key] = parseInt(value);
+                    });
+                    return Object.keys(flags).length ? flags : null; // Return null if no flags are in URL
+                },
+                getDefaultFlags() {
+                    return {
+                        Flag1: 1,      // 0001
+                        Flag2: 2,      // 0010
+                        Flag3: 4,      // 0100
+                        Flag4: 8       // 1000
+                    };
+                },
+                updateUrlParams() {
+                    const urlParams = new URLSearchParams();
+                    Object.entries(this.flags).forEach(([key, value]) => {
+                        urlParams.set(key, value);
+                    });
+                    // Update the URL without reloading the page
+                    window.history.pushState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+                },
                 resetFlags() {
                     this.selectedFlags = [];
                     this.checkResult = null;
@@ -232,10 +273,33 @@
                 },
                 getFlagsForNumber(num) {
                     return Object.keys(this.flags).filter(flag => (num & this.flags[flag]) === this.flags[flag]);
+                },
+                selectAll() {
+                    this.selectedFlags = Object.values(this.flags);
+                },
+                unselectAll() {
+                    this.selectedFlags = [];
+                },
+                loadExample() {
+                    if (confirm('Do you want to load the example flags?')) {
+                        this.flags = {
+                            Flag1: 1,
+                            Flag2: 2,
+                            Flag3: 4,
+                            Flag4: 8
+                        };
+                    }
                 }
             },
             mounted() {
-                this.allFlags = Array.from({ length: this.totalFlagsSum + 1 }, (_, i) => i);
+            },
+            watch: {
+                flags: {
+                    handler() {
+                        this.updateUrlParams();
+                    },
+                    deep: true
+                }
             }
         }).mount('#app');
     </script>
